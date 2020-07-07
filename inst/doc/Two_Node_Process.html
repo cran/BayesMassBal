@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Scott Koermer" />
+
+<meta name="date" content="2020-07-06" />
+
+<title>Two_Node_Process</title>
+
+<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
+// v0.0.1
+// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
+
+document.addEventListener('DOMContentLoaded', function() {
+  const codeList = document.getElementsByClassName("sourceCode");
+  for (var i = 0; i < codeList.length; i++) {
+    var linkList = codeList[i].getElementsByTagName('a');
+    for (var j = 0; j < linkList.length; j++) {
+      if (linkList[j].innerHTML === "") {
+        linkList[j].setAttribute('aria-hidden', 'true');
+      }
+    }
+  }
+});
+</script>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+code.sourceCode > span { display: inline-block; line-height: 1.25; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Two_Node_Process</h1>
+<h4 class="author">Scott Koermer</h4>
+<h4 class="date">2020-07-06</h4>
+
+
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">library</span>(BayesMassBal)</span></code></pre></div>
+<p>The function <code>BMB</code> is used with a two node process and simulated data.</p>
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASAAAACQCAMAAACf4EZzAAAAyVBMVEUAAAAAADUAADoAAF4AAGYALoQAOjoAOpAAU6gAZrYfAAAfADUfAF4fU14fU4QfU6gfdMk2AAA2kus6AAA6ADo6AGY6OgA6OpA6ZmY6ZrY6kNtMLgBMUzVMsetgUwBgUzVgsetgzutmAABmADpmAGZmOpBmtrZmtv90dDV0kqh0zuuHkl6HsYSHscmHzqiHzsmHzuuQOgCQOjqQOmaQ2/+2ZgC225C2///bkDrbtrbb27bb2//b////tmb/25D/27b//7b//9v///+LUBh9AAAACXBIWXMAAA7DAAAOwwHHb6hkAAAFiElEQVR4nO1dbXsURRAcJCKKCuQQIShKUBOSQC5q4FTuuNv//6PY2bfb3Zndnpnt7k3Hrg8hPA9UddXN284l1yZTjMLMXcBNhwYEQAMCoAEB0IAAaEAAkAMyMZidNkgamW4ZjpiAaGiDpJHpNCCATgMC6FKdrM1R/nV7/DUuLYIjZLpUJ2U0a3OCS4vgCJku2cn1wYfqCyrtdEfIdMlO7OAZmmEaUFbOsWKGbRbGmWgaUI7VwQc7w7bHJ9n6i7/RaCc7QqZLd7JZ/GFn2Pqrj9nu6gSNdrIjZLp0J7ure4sqFzuKsGgnO0Kmm+BkZeo9bJWPIjTaqY6Q6SY42SyqPWzlbPYakEV9Slz1l2gNqMCnq3JiueNHA8rsumyKp7Fs88QZPxpQZvcw87z45rq49Pp/7GLn5Q3fne9/neqEiDZIGpnO4yT38jNBQAi0QdK9v4/fy8B0XSeH9o/LX8x93ICwaC0gw3268XuZQQPNNx4ny8sXX56lOan/CTJt2zVk2KEbvZcZVjQjTpYv775KdWJIaLPWex+AYYdu9F4GlMR+qasC8Wn3xgHDDl1zL5MfSX6IGkc2Ip+Ttz+ZRx4jwU5oaJtB1BheG+Oe4T27WHUvY/9n/ETzbzfeqRC+mhLR1hFVhu0Jde06dumqe5n84fpZOYKi3tb0OLnzsJwJF992DaHQXnxj6iUpgda0DefYvnYfA52A6nuZfz5GTjH7ivhX0wLvHvde8Yi5MEj77vHh8rx7HooYmF3DmeeexXtQbO5l4gIq9IYDOjXf9UcQAu15vk5fvjiMp23vY7XhzSJoDdrfy8QENLofW7w5c6YYBm01imID6vyIQ2M4bA3aH5rCA2r0xpwkBBRCuzzt7vaRB8W24bA1qL6Xid7mIScpIyiA9jRxaWuwNxwSUHMvk00PqAesgLo47T+yRgbUGLbTa/MjuEg39zKZE5B9R68JL97JYEC5JPToN0zbHz9RtF3DK2N8l5kwRQ1PvBFOBgPaXR35hnYY7cUD58ojgjYE8wdU0P77Xxrty+K459vFQmhDEBNQPsXcg1SPbiSggZd6HfBgTEQbAsYRpAFlSU5mpA3B/AEVq+nx+O5IRBuC+QPqHL14aUNwU94Xm4U2SBqZTgMC6DQggE4DAug0IIBOAwLoNCCATgMC6DQggE4DAug0IIAu9m3NWWmDpHHpWEUk184iIrl2FhHJtbOISK6dRURy7SwikmtnEZFcO4uI5NpZRCTX7ooUP/rg+zHSabQUvK4INSqRFcK7MB5adF6vCCk0oDARDQgQ0YAAEQ0IENGAABENiFlEcu0sIpJrZxGRXDuLiOTaWUQk184iIrl2FhHJtbOISK6dRURy7SwikmtnEZFcO4uI5NpZRCTXziIiuXYWEcm1s4hIrp1FRHLtLCKSa2cRkVw7i4jk2llEJNfOIiK5dhYRybWziEiunUVEcu1dfoMv1FCyGKAWMPg6JiPJ3S9ELkAQUM0pP6DSCb6Mocndp0OvQBFQQcqwTLNIYP8OV017SwLK0H/JjZS2r8KhQSNyewLSg+JthgYEQAMCoAEB0IAAaEAANCAAGhAADQiABgSANKCJraaYaf0gDSit1dRctH7QTrG0VlNz0XpBG1Cr81JCBwGYNuQzwCeCNqBWqynMF3zf0Il+GSLexZpWU+t7iCOoob2m/F3DEsQB1Z2Xdn+9xwyoot39SfaBCw2IA6o7L62OMNegmnb7+inhh1KUoD4olp2Xtr9H9+IKobU907a/0W5m1AGVnZeuT1B3sXZDJ4zmImOgDqjYbOzHy5ugRjJRtAWEBzSp1RRIO9CvCBXEjxqTWk3BtP5+RaggDajdaurm0/qh1x0ANCAAGhAADQiABgRAAwKgAQHQgABoQAA+A/krcKpTUoolAAAAAElFTkSuQmCC" /><!-- --></p>
+<p>The constraints around these process nodes are:</p>
+<p><span class="math display">\[\begin{align}
+y_1 &amp;= y_2 +y_4\\
+y_2 &amp;= y_3 +y_5
+\end{align}\]</span></p>
+<p>Therefore the matrix of constraints, <code>C</code> is:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>C &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">c</span>(<span class="dv">1</span>,<span class="op">-</span><span class="dv">1</span>,<span class="dv">0</span>,<span class="op">-</span><span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">1</span>,<span class="op">-</span><span class="dv">1</span>,<span class="dv">0</span>,<span class="op">-</span><span class="dv">1</span>), <span class="dt">nrow =</span> <span class="dv">2</span>, <span class="dt">ncol =</span> <span class="dv">5</span>, <span class="dt">byrow =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb2-2"><a href="#cb2-2"></a>C</span>
+<span id="cb2-3"><a href="#cb2-3"></a><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5]</span></span>
+<span id="cb2-4"><a href="#cb2-4"></a><span class="co">#&gt; [1,]    1   -1    0   -1    0</span></span>
+<span id="cb2-5"><a href="#cb2-5"></a><span class="co">#&gt; [2,]    0    1   -1    0   -1</span></span></code></pre></div>
+<p>The <code>constrainProcess</code> function in the <code>BayesMassBal</code> package is used to generate an <code>X</code> matrix based on <code>C</code> that will later be used with the <code>BMB</code> function.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a>X &lt;-<span class="st"> </span><span class="kw">constrainProcess</span>(<span class="dt">C =</span> C)</span>
+<span id="cb3-2"><a href="#cb3-2"></a>X</span>
+<span id="cb3-3"><a href="#cb3-3"></a><span class="co">#&gt;      [,1] [,2] [,3]</span></span>
+<span id="cb3-4"><a href="#cb3-4"></a><span class="co">#&gt; [1,]    1    1    1</span></span>
+<span id="cb3-5"><a href="#cb3-5"></a><span class="co">#&gt; [2,]    1    0    1</span></span>
+<span id="cb3-6"><a href="#cb3-6"></a><span class="co">#&gt; [3,]    1    0    0</span></span>
+<span id="cb3-7"><a href="#cb3-7"></a><span class="co">#&gt; [4,]    0    1    0</span></span>
+<span id="cb3-8"><a href="#cb3-8"></a><span class="co">#&gt; [5,]    0    0    1</span></span></code></pre></div>
+<p>The previously simulated data is loaded from a <code>.csv</code> file using the <code>importObservations()</code> function. The local location of the the file imported below can be found by typing <code>system.file(&quot;extdata&quot;, &quot;twonode_example.csv&quot;,package = &quot;BayesMassBal&quot;)</code>. View the document in Excel to see how your data should be formatted for import. <strong><em>Note:</em></strong> it is not required that the entries into the <code>*.csv</code> file are separated by <code>&quot;;&quot;</code>.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>y &lt;-<span class="st"> </span><span class="kw">importObservations</span>(<span class="dt">file =</span> <span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;twonode_example.csv&quot;</span>,</span>
+<span id="cb4-2"><a href="#cb4-2"></a>                                  <span class="dt">package =</span> <span class="st">&quot;BayesMassBal&quot;</span>),</span>
+<span id="cb4-3"><a href="#cb4-3"></a>                  <span class="dt">header =</span> <span class="ot">TRUE</span>, <span class="dt">csv.params =</span> <span class="kw">list</span>(<span class="dt">sep =</span> <span class="st">&quot;;&quot;</span>))</span></code></pre></div>
+<p>Then, the <code>BMB</code> function is used to generate the distribution of constrained masses from the data with <code>cov.structure = &quot;indep&quot;</code>.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>indep.samples &lt;-<span class="st"> </span><span class="kw">BMB</span>(<span class="dt">X =</span> X, <span class="dt">y =</span> y, <span class="dt">cov.structure =</span> <span class="st">&quot;indep&quot;</span>, <span class="dt">BTE =</span> <span class="kw">c</span>(<span class="dv">100</span>,<span class="dv">3000</span>,<span class="dv">1</span>), <span class="dt">lml =</span> <span class="ot">TRUE</span>, <span class="dt">verb =</span> <span class="dv">0</span>)</span></code></pre></div>
+<p>The output of <code>BMB</code> is a <code>BayesMassBal</code> object. Special instructions are designated when feeding a <code>BayesMassBal</code> object to the <code>plot()</code> function. Adding the argument <code>layout = &quot;dens&quot;</code> and indicating the mass balanced flow rate for CuFeS2 at <span class="math inline">\(y_3\)</span> should be plotted using a list supplied to <code>sample.params</code>, the desired distribution can be plotted with its 95% <a href="https://en.wikipedia.org/wiki/Credible_interval">Highest Posterior Density Interval</a>.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a></span>
+<span id="cb6-2"><a href="#cb6-2"></a><span class="kw">plot</span>(indep.samples,<span class="dt">sample.params =</span> <span class="kw">list</span>(<span class="dt">ybal =</span> <span class="kw">list</span>(<span class="dt">CuFeS2 =</span> <span class="dv">3</span>)),</span>
+<span id="cb6-3"><a href="#cb6-3"></a>    <span class="dt">layout =</span> <span class="st">&quot;dens&quot;</span>,<span class="dt">hdi.params =</span> <span class="kw">c</span>(<span class="dv">1</span>,<span class="fl">0.95</span>))</span></code></pre></div>
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASAAAAEgCAMAAAAjXV6yAAAAZlBMVEUAAAAAADoAAGYAOpAAZrY6AAA6ADo6AGY6Ojo6OpA6kNtmAABmADpmkJBmtrZmtv+QOgCQZgCQ27aQ2/+2ZgC225C2/7a2//++vr7bkDrb////AAD/tmb/trb/25D//7b//9v///8JXS7WAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAJRUlEQVR4nO2dbYOjJhSF3XnZtjvbbtqx3TpjM/H//8kqaIIROIAKyJzzIeML9158BhCTG1J1lFVV6grkLgICIiAgAgIiICACAiIgIAICIiAgAgIiICACAiIgIAICIiAgAgIiICACAiIgIAICIiAgAgIiICACAiIgIAICIiAgAgIiICACAiIgIAICIiAgAgIiICACAiIgoE0BVZ569zXwl1+I3QF5ln/f2b9vCAIK8E9AwD8BAf8EBPwfCJD+LrNliLWALid5M3z46RHAJs/a5w6oqb7JjXbaWOFMyKf2g+8AQhEBXU5XLM3jm3MAm8oC9PHyY9psDZ1sR0CVfPEm9Gla0ARo52HO7ZhBTTU2oQRjUDW95gyo72TyLmZoPwQUFMCmAEC+MbIAZH27wCbn2le3PzkDanoEYhhqYt/FFECeQaIO0l9e+2HoqYsPqFL/ZgtI3uYvp36ITgrIL0qCiWL9+EZAOl0nivVTZEDV3YZPmKhj0Iilnw4RkFbTVPpySgvIJ04W86BgZ261rxZbBGTwumhKW4WwuCUgbST7sWBFA+Qe6RMAqnSbBKR1qgByDfVZATmHKh9Qpd8mIJ1P0/bKEFafBAR85g6oMu0QkMaleWdNCLtLAgIuMwdUOe8FhwAeCQh4JCDg8cCAnMIVDshOhIAIyNMf2g8IAf0REPB3aEAOAaN+sjp8cNhGzHLFPPIDJJLvlGzFUGdSqwHhiJEBjWgi5SgeEND5WQCKlOV6QEBRW5ATDhQyKqAhye6pm4brVc6kygLUCUZfXs1ZwAQUEsAma+3daBwC0D5Zro40QMwsAAU7IyCgsgBNX0SwfKVuS0Culc0HkDnzLsSZ0BaAQNDIX8l88g9gU2mA+hmQ4Sk1xFlnrb07i5wAhQSwiYCANgFkj1oqIB8UBBR0FIZw9ERAwFMBgKxhCwXkR4KAwg7bQ7g6yhKQyQ8BAT8EBPz4HreEcPaTIyCjGwICbggIuCEg4Mb/RJGAzF4ICHghIOAl4EyBgCxOCAg4ISDghICAEwICPgLYRf7gMMJargcGFGct1+MCirQS53EBxVnL1eoiAF5xLejAgOKs5XpkQFHWcg0GZDhZ2jzI7uGogDbMci0TULAzAgJa1B44CMBXWJbroQHFyHI9NqD9s1yRfQC/srJcDw8oJIBNBAR0V3toHgCQgMB5AgLnSwKErQlorf9lAQICBQgIlCgIkIMxAa32T0C+JcoB5GIbwJCAQBECAkWKAeRkGgCRgEAZAgJlSgHkZklAW/ifFyIgUKgQQI6GBLSJ/1mpMgC52hHQJv4JyKdUEYCczQKGKgICxQgIFIuaH7TTgtvuVgFjVWxAeyy4XRKgXZZLLgmQfsHtlVmu2wNSChbQgjyMcge0z4LbxQDqdlpwew9At5LHnwf52BDQZv4JyLXo4QF5mRDQhv6ra4h1/gkI+Ccg4D8xID+LAJoEBAofHJCnQQBOAgKlDw5oX/+Vb4hPB6g6OKBqZ0ADIQKyG/iFyAyQ57/X27+wODAg3/bv61/quIC8R1BP/6PefT5JyAtQFwdQ50EoJ0D+szg//5PeOw9CGQEKeFDy8n+VeNPS1S4fQFVUQM6IsgEU9H6oh39FUwKJk2kugMI+cnD3r+qWJ+pgnAmgW6mo8yAHQlkAUusZeaIIEeUAaFbJ2DNpRCgDQPMqxn/UsCNKDWiRQJTgWcyaxJQWkKZqaR5WzaleCQHp65TuaV4PaS2g4AW3Tf+xxG93LCitBBS44Lal12fwftCM0TpA7sslV3OZXWYASLid6rgOkHnB7SuKfz317lneO4BviFWAIi3ZblPmb7lGWXDbqswBRVlw26rcAQUFsImAgD4fIE+9+xr4yy/E3oBc3BrPZGpCQOAMAYEzBATOEBA4Q0DgDAGBMwQEzhAQOLMToHJEQEAEBERAQAQEREBABAREQEAEBERAQAQEREBABAS0IaDzL9eUhrYaFhqSqo0fxOpNmqqy/VKgYjLtiLwl05pGepPu/CwXi4LaDtDHyzXnox2WYRoJteZPqrUmjVjCyUhIMZl2LqfepDFfrsaka/tKfby4ENoMUHvLPJN5IPWTrJAZkM5E/hJnbap6q+a3jTty5bnGlPemM5HhjCaqtgLUVt+uWUNqjZvHP02AtCZ2QKrJfOfaYp1Mzl/1hTXacAy6Xa0IP9XENgZpTEAXmydvKTu1uTksTdqHf16sw9ZNewCS/8zhdWjKToBuJrMB3mYy3zGvPKczaYaOBn9XV2hfQEMqmiegoSWcn32uVmzYbkkaQF9e74+btGsXExt+XQyMuAZAtvajBSSOjOuK2rULoOkimzGrxFiPpYnS14CJstPYhxPdGCQAuQzVewBSb/OOLehqIklZGr8GUAN+gnppIjN2k3Wx2UTRDdDNxH8MspU2mIjBUUnbtWhrQPLW0Pctp0cNnUltf25QTK63JCHQK2cmcuHw2Lf5MkVAQAQEREBABAREQEAEBERAQAQEREBABAREQEAEBERAQAQEREBABAREQEAEBERAQAQEREBABAREQEAEBERAQAQElBDQMj1n/iPS6gf8o0TC7+yz/lqTYSMWgnpwSRB2UL6AhiSnuzwhmSdVqwc1qREyw7EWGYD2BGEXZQtI/BzwPI1wNLicFCgaQDIxaTCF6WoOSgFIXEHzdH7+/XnsALXsJIvfaZ8Dmhbf+++nLDm8KIAa2Z0WuZmWdDUHpQDUihTTH+fnvuYi+2kgNuRVLgA16rWpV64B1Eze7hM6LQnCDkoBaLiw89dXmRnWd4CP76+y/9wBaucDrPob3EtA8uyYcjZPrl81SicZg/oW03eXMR1RNpJ26GOaLqYMMXpA001M+pnGtf72df2uyKoxOg2g/v9cfxuTTIfXfvR4+HvZgrr5+GHvYu39/V72rJXtJxGgj+9/fX/tri1IbGi6WHd3p5sG6f4+rgE0oZxM5HeH1vJJA+hy+rW/rnEMenyTqct3XUyTD6zc5kV3G/aVMejH5PyWrYkShB2UZh4k/rHiLjZwkY2nPzRrQfUyU7eVt3ExBXx868eZ+7uYmB7Kb6gNZWGCsIPSABLDj5wHialc1Q+p/bXNu1i9zNEXDxECybD1x3IeJBqcKCU7GEgQdlAiQL+Zc6czU6Iutr7px1IKQOdnY/L9MMebd4vlkbj6H7hZjFDeS+zyAAAAAElFTkSuQmCC" /><!-- --></p>
+<p>It is also possible to generate trace plots to inspect convergence of the Gibbs sampler. Here are trace plots for <span class="math inline">\(\beta\)</span></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="kw">plot</span>(indep.samples,<span class="dt">sample.params =</span> <span class="kw">list</span>(<span class="dt">beta =</span> <span class="kw">list</span>(<span class="dt">CuFeS2 =</span> <span class="dv">1</span><span class="op">:</span><span class="dv">3</span>, <span class="dt">gangue =</span> <span class="dv">1</span><span class="op">:</span><span class="dv">3</span>)),<span class="dt">layout =</span> <span class="st">&quot;trace&quot;</span>,<span class="dt">hdi.params =</span> <span class="kw">c</span>(<span class="dv">1</span>,<span class="fl">0.95</span>))</span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>The model with independent variances may not be the best fitting model. Models specifying covariance between sample locations for a single component, and covariance between components at a single location are fit.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a>component.samples &lt;-<span class="st"> </span><span class="kw">BMB</span>(<span class="dt">X =</span> X, <span class="dt">y =</span> y, <span class="dt">cov.structure =</span> <span class="st">&quot;component&quot;</span>, <span class="dt">BTE =</span> <span class="kw">c</span>(<span class="dv">100</span>,<span class="dv">3000</span>,<span class="dv">1</span>), <span class="dt">lml =</span> <span class="ot">TRUE</span>, <span class="dt">verb =</span> <span class="dv">0</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a>location.samples &lt;-<span class="st"> </span><span class="kw">BMB</span>(<span class="dt">X =</span> X, <span class="dt">y =</span> y, <span class="dt">cov.structure =</span> <span class="st">&quot;location&quot;</span>, <span class="dt">BTE =</span> <span class="kw">c</span>(<span class="dv">100</span>,<span class="dv">3000</span>,<span class="dv">1</span>), <span class="dt">lml =</span> <span class="ot">TRUE</span>, <span class="dt">verb =</span> <span class="dv">0</span>)</span></code></pre></div>
+<p>Computing <span class="math inline">\(\log(\mathrm{Bayes Factor})\)</span> for <span class="math inline">\(BF = p(y|\texttt{indep})/p(y|\texttt{component})\)</span>:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a>indep.samples<span class="op">$</span>lml <span class="op">-</span><span class="st"> </span>component.samples<span class="op">$</span>lml</span>
+<span id="cb10-2"><a href="#cb10-2"></a><span class="co">#&gt; [1] -138.7161</span></span></code></pre></div>
+<p>Then comparing <span class="math inline">\(p(y|\texttt{component})\)</span> to <span class="math inline">\(p(y|\texttt{location})\)</span></p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a>component.samples<span class="op">$</span>lml <span class="op">-</span><span class="st"> </span>location.samples<span class="op">$</span>lml</span>
+<span id="cb11-2"><a href="#cb11-2"></a><span class="co">#&gt; [1] 0.8340885</span></span></code></pre></div>
+<p>Shows there is little difference between the models where <code>cov.structure  = &quot;location&quot;</code> and <code>cov.structure = &quot;component&quot;</code>, but both of these models better explain the data than <code>cov.structure = &quot;indep&quot;</code>.</p>
+<p>The main effect of a variable independent of the process can be calculated by supplying a function, <code>fn</code> that takes the arguments of mass balanced flow rates <code>ybal</code>, and the random independent and uniformly distributed variables <code>x</code>. Information can be gained on the main effect of a particular element of <code>x</code>, <code>xj</code>, on <code>fn</code> using the <code>mainEff</code> function. Output from <code>mainEff</code> includes information on the distribution of <span class="math inline">\(E_x\lbrack f(x,y_{\mathrm{bal}})|x_j \rbrack\)</span>.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a>fn_example &lt;-<span class="st"> </span><span class="cf">function</span>(X,ybal){</span>
+<span id="cb12-2"><a href="#cb12-2"></a>      cu.frac &lt;-<span class="st"> </span><span class="fl">63.546</span><span class="op">/</span><span class="fl">183.5</span></span>
+<span id="cb12-3"><a href="#cb12-3"></a>      feed.mass &lt;-<span class="st"> </span>ybal<span class="op">$</span>CuFeS2[<span class="dv">1</span>] <span class="op">+</span><span class="st"> </span>ybal<span class="op">$</span>gangue[<span class="dv">1</span>]</span>
+<span id="cb12-4"><a href="#cb12-4"></a>      <span class="co"># Concentrate mass per ton feed</span></span>
+<span id="cb12-5"><a href="#cb12-5"></a>      con.mass &lt;-<span class="st"> </span>(ybal<span class="op">$</span>CuFeS2[<span class="dv">3</span>] <span class="op">+</span><span class="st"> </span>ybal<span class="op">$</span>gangue[<span class="dv">3</span>])<span class="op">/</span>feed.mass</span>
+<span id="cb12-6"><a href="#cb12-6"></a>      <span class="co"># Copper mass per ton feed</span></span>
+<span id="cb12-7"><a href="#cb12-7"></a>      cu.mass &lt;-<span class="st"> </span>(ybal<span class="op">$</span>CuFeS2[<span class="dv">3</span>]<span class="op">*</span>cu.frac)<span class="op">/</span>feed.mass</span>
+<span id="cb12-8"><a href="#cb12-8"></a>      gam &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="op">-</span><span class="dv">1</span>,<span class="op">-</span><span class="dv">1</span><span class="op">/</span>feed.mass,cu.mass,<span class="op">-</span>con.mass,<span class="op">-</span>cu.mass,<span class="op">-</span>con.mass)</span>
+<span id="cb12-9"><a href="#cb12-9"></a>      f &lt;-<span class="st"> </span>X <span class="op">%*%</span><span class="st"> </span>gam</span>
+<span id="cb12-10"><a href="#cb12-10"></a>      <span class="kw">return</span>(f)</span>
+<span id="cb12-11"><a href="#cb12-11"></a>      }</span>
+<span id="cb12-12"><a href="#cb12-12"></a></span>
+<span id="cb12-13"><a href="#cb12-13"></a>rangex &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">c</span>(<span class="fl">4.00</span> ,<span class="fl">6.25</span>,<span class="dv">1125</span>,<span class="dv">1875</span>,<span class="dv">3880</span>,<span class="dv">9080</span>,<span class="dv">20</span>,<span class="dv">60</span>,<span class="dv">96</span>,<span class="dv">208</span>,<span class="fl">20.0</span>,<span class="fl">62.5</span>),</span>
+<span id="cb12-14"><a href="#cb12-14"></a>                   <span class="dt">ncol =</span> <span class="dv">6</span>, <span class="dt">nrow =</span> <span class="dv">2</span>)</span>
+<span id="cb12-15"><a href="#cb12-15"></a>mE_example &lt;-<span class="st"> </span><span class="kw">mainEff</span>(indep.samples, <span class="dt">fn =</span> <span class="st">&quot;fn_example&quot;</span>,<span class="dt">rangex =</span>  rangex,<span class="dt">xj =</span> <span class="dv">3</span>, <span class="dt">N =</span> <span class="dv">25</span>, <span class="dt">res =</span> <span class="dv">25</span>)</span></code></pre></div>
+<p>A plot of the output can be made. To get lines that are better connected, change increase <code>N</code> in the <code>mainEff</code> function.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a>m.sens&lt;-<span class="st"> </span>mE_example<span class="op">$</span>fn.out[<span class="dv">2</span>,]</span>
+<span id="cb13-2"><a href="#cb13-2"></a>hpd.sens &lt;-<span class="st"> </span>mE_example<span class="op">$</span>fn.out[<span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">3</span>),]</span>
+<span id="cb13-3"><a href="#cb13-3"></a><span class="kw">row.names</span>(hpd.sens) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;upper&quot;</span>, <span class="st">&quot;lower&quot;</span>)</span>
+<span id="cb13-4"><a href="#cb13-4"></a>g.plot &lt;-<span class="st"> </span>mE_example<span class="op">$</span>g<span class="op">/</span><span class="dv">2000</span></span>
+<span id="cb13-5"><a href="#cb13-5"></a></span>
+<span id="cb13-6"><a href="#cb13-6"></a>y.lim &lt;-<span class="st"> </span><span class="kw">range</span>(hpd.sens)</span>
+<span id="cb13-7"><a href="#cb13-7"></a></span>
+<span id="cb13-8"><a href="#cb13-8"></a>lzero.bound &lt;-<span class="st"> </span><span class="kw">apply</span>(hpd.sens,<span class="dv">1</span>,<span class="cf">function</span>(X){<span class="kw">which</span>(X <span class="op">&lt;=</span><span class="st"> </span><span class="dv">0</span>)})</span>
+<span id="cb13-9"><a href="#cb13-9"></a>lzero.mean &lt;-<span class="st"> </span><span class="kw">which</span>(m.sens <span class="op">&lt;=</span><span class="st"> </span><span class="dv">0</span>)</span>
+<span id="cb13-10"><a href="#cb13-10"></a></span>
+<span id="cb13-11"><a href="#cb13-11"></a>main.grid &lt;-<span class="st"> </span><span class="kw">pretty</span>(g.plot)</span>
+<span id="cb13-12"><a href="#cb13-12"></a>minor.grid &lt;-<span class="st"> </span><span class="kw">pretty</span>(g.plot,<span class="dv">25</span>)</span>
+<span id="cb13-13"><a href="#cb13-13"></a>minor.grid &lt;-<span class="st"> </span>minor.grid[<span class="op">-</span><span class="kw">which</span>(minor.grid <span class="op">%in%</span><span class="st"> </span>main.grid)]</span>
+<span id="cb13-14"><a href="#cb13-14"></a></span>
+<span id="cb13-15"><a href="#cb13-15"></a>y.main &lt;-<span class="st"> </span><span class="kw">pretty</span>(hpd.sens)</span>
+<span id="cb13-16"><a href="#cb13-16"></a></span>
+<span id="cb13-17"><a href="#cb13-17"></a>opar &lt;-<span class="st"> </span><span class="kw">par</span>(<span class="dt">no.readonly =</span><span class="ot">TRUE</span>) </span>
+<span id="cb13-18"><a href="#cb13-18"></a><span class="kw">par</span>(<span class="dt">mar =</span> <span class="kw">c</span>(<span class="fl">4.2</span>,<span class="dv">4</span>,<span class="dv">1</span>,<span class="dv">1</span>))</span>
+<span id="cb13-19"><a href="#cb13-19"></a><span class="kw">plot</span>(g.plot,m.sens, <span class="dt">type =</span> <span class="st">&quot;n&quot;</span>, <span class="dt">xlim =</span> <span class="kw">range</span>(g.plot), <span class="dt">ylim =</span> y.lim, <span class="dt">ylab =</span> <span class="st">&quot;Net Revenue ($/ton Feed)&quot;</span>, <span class="dt">xlab=</span>  <span class="st">&quot;Cu Price ($/lb)&quot;</span>)</span>
+<span id="cb13-20"><a href="#cb13-20"></a></span>
+<span id="cb13-21"><a href="#cb13-21"></a><span class="kw">abline</span>(<span class="dt">v =</span> main.grid, <span class="dt">lty =</span> <span class="dv">6</span>, <span class="dt">col =</span> <span class="st">&quot;grey&quot;</span>, <span class="dt">lwd =</span> <span class="dv">1</span>)</span>
+<span id="cb13-22"><a href="#cb13-22"></a><span class="kw">abline</span>(<span class="dt">v =</span> minor.grid, <span class="dt">lty =</span><span class="dv">3</span>, <span class="dt">col =</span> <span class="st">&quot;grey&quot;</span>, <span class="dt">lwd =</span> <span class="fl">0.75</span>)</span>
+<span id="cb13-23"><a href="#cb13-23"></a></span>
+<span id="cb13-24"><a href="#cb13-24"></a><span class="kw">abline</span>(<span class="dt">h =</span> <span class="dv">0</span>, <span class="dt">col =</span> <span class="st">&quot;red&quot;</span>, <span class="dt">lwd =</span> <span class="dv">1</span>, <span class="dt">lty =</span> <span class="dv">6</span>)</span>
+<span id="cb13-25"><a href="#cb13-25"></a></span>
+<span id="cb13-26"><a href="#cb13-26"></a><span class="kw">lines</span>(g.plot[lzero.mean],m.sens[lzero.mean],<span class="dt">col =</span> <span class="st">&quot;red&quot;</span>, <span class="dt">lwd =</span><span class="dv">2</span>)</span>
+<span id="cb13-27"><a href="#cb13-27"></a><span class="kw">lines</span>(g.plot[<span class="op">-</span>lzero.mean[<span class="op">-</span><span class="kw">length</span>(lzero.mean)]],m.sens[<span class="op">-</span>lzero.mean[<span class="op">-</span><span class="kw">length</span>(lzero.mean)]],<span class="dt">col =</span> <span class="st">&quot;darkgreen&quot;</span>, <span class="dt">lwd =</span><span class="dv">2</span>)</span>
+<span id="cb13-28"><a href="#cb13-28"></a></span>
+<span id="cb13-29"><a href="#cb13-29"></a><span class="kw">lines</span>(g.plot[lzero.bound<span class="op">$</span>lower],hpd.sens[<span class="dv">2</span>,][lzero.bound<span class="op">$</span>lower], <span class="dt">lty =</span> <span class="dv">5</span>, <span class="dt">lwd =</span> <span class="dv">2</span>, <span class="dt">col =</span> <span class="st">&quot;red&quot;</span>)</span>
+<span id="cb13-30"><a href="#cb13-30"></a><span class="kw">lines</span>(g.plot[<span class="op">-</span>lzero.bound<span class="op">$</span>lower],hpd.sens[<span class="dv">2</span>,][<span class="op">-</span>lzero.bound<span class="op">$</span>lower], <span class="dt">lty =</span> <span class="dv">5</span>, <span class="dt">lwd =</span> <span class="dv">2</span>, <span class="dt">col =</span> <span class="st">&quot;darkgreen&quot;</span>)</span>
+<span id="cb13-31"><a href="#cb13-31"></a></span>
+<span id="cb13-32"><a href="#cb13-32"></a><span class="kw">lines</span>(g.plot[lzero.bound<span class="op">$</span>upper],hpd.sens[<span class="dv">1</span>,][lzero.bound<span class="op">$</span>upper], <span class="dt">lty =</span> <span class="dv">5</span>, <span class="dt">lwd =</span> <span class="dv">2</span>, <span class="dt">col =</span> <span class="st">&quot;red&quot;</span>)</span>
+<span id="cb13-33"><a href="#cb13-33"></a><span class="kw">lines</span>(g.plot[<span class="op">-</span>lzero.bound<span class="op">$</span>upper],hpd.sens[<span class="dv">1</span>,][<span class="op">-</span>lzero.bound<span class="op">$</span>upper], <span class="dt">lty =</span> <span class="dv">5</span>, <span class="dt">lwd =</span> <span class="dv">2</span>, <span class="dt">col=</span> <span class="st">&quot;darkgreen&quot;</span>)</span>
+<span id="cb13-34"><a href="#cb13-34"></a></span>
+<span id="cb13-35"><a href="#cb13-35"></a><span class="kw">legend</span>(<span class="st">&quot;topleft&quot;</span>, <span class="dt">legend =</span> <span class="kw">c</span>(<span class="st">&quot;Expected Main Effect&quot;</span>, <span class="st">&quot;95% Bounds&quot;</span>, <span class="st">&quot;Net Revenue &lt; $0&quot;</span>, <span class="st">&quot;Net Revenue &gt; $0&quot;</span>), <span class="dt">col =</span> <span class="kw">c</span>(<span class="st">&quot;black&quot;</span>,<span class="st">&quot;black&quot;</span>,<span class="st">&quot;red&quot;</span>, <span class="st">&quot;darkgreen&quot;</span>), <span class="dt">lty =</span> <span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">6</span>,<span class="dv">1</span>,<span class="dv">1</span>), <span class="dt">lwd =</span> <span class="kw">c</span>(<span class="dv">2</span>,<span class="dv">2</span>,<span class="dv">2</span>,<span class="dv">2</span>), <span class="dt">bg =</span> <span class="st">&quot;white&quot;</span>)</span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a></span>
+<span id="cb14-2"><a href="#cb14-2"></a><span class="kw">par</span>(opar)</span></code></pre></div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
