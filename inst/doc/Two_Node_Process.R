@@ -65,6 +65,10 @@ C
 X <- constrainProcess(C = C)
 X
 
+## ----Xdefcsv------------------------------------------------------------------
+constraint_file_location <- system.file("extdata", "twonode_constraints.csv",package = "BayesMassBal")
+X <- constrainProcess(file = constraint_file_location)
+
 ## ----datasim------------------------------------------------------------------
 y <- importObservations(file = system.file("extdata", "twonode_example.csv",
                                   package = "BayesMassBal"),
@@ -81,6 +85,9 @@ plot(indep.samples,sample.params = list(ybal = list(CuFeS2 = 3)),
 ## ----traceplot----------------------------------------------------------------
 plot(indep.samples,sample.params = list(beta = list(CuFeS2 = 1:3, gangue = 1:3)),layout = "trace",hdi.params = c(1,0.95))
 
+## ----diagnostics--------------------------------------------------------------
+indep.samples$diagnostics
+
 ## ----compdraw-----------------------------------------------------------------
 component.samples <- BMB(X = X, y = y, cov.structure = "component", BTE = c(100,3000,1), lml = TRUE, verb = 0)
 
@@ -93,6 +100,9 @@ indep.samples$lml - component.samples$lml
 
 ## ----compvsloc----------------------------------------------------------------
 component.samples$lml - location.samples$lml
+
+## ----bayessummary-------------------------------------------------------------
+summary(component.samples, export = NA)
 
 ## ----maineff------------------------------------------------------------------
 fn_example <- function(X,ybal){

@@ -1,7 +1,15 @@
-indep_sig <- function(X,y,priors,BTE = c(3000,100000,1), verb = 1){
+indep_sig <- function(X,y,priors,BTE = c(3000,100000,1), verb = 1, eps = sqrt(.Machine$double.eps)){
 
-  gamdraw <- function(x, shape = alpha){
-    rgamma(1,shape = shape, rate = x)
+  gamdraw <- function(x){
+    rinvgamma(1,shape = x[1], scale = x[2])
+  }
+  nDigits <- function(x){
+    truncX <- floor(abs(x))
+    if(truncX != 0){
+      floor(log10(truncX)) + 1
+    } else {
+      1
+    }
   }
 
   # Number of tests
@@ -36,39 +44,48 @@ indep_sig <- function(X,y,priors,BTE = c(3000,100000,1), verb = 1){
 
   beta <- replicate(M, matrix(NA, nrow = no.betas, ncol = iters), simplify = FALSE)
 
-  names(beta) <- names(y)
+  names(beta) <- names(Sig) <- names(y)
 
-  bhat <- as.matrix(solve(t(X) %*% X) %*% t(X) %*% Y)
-  bhat[which(bhat < 0)] <- 1000
-
-
-  b.use <- bhat
+  bhat <- as.vector(solve(t(X) %*% X) %*% t(X) %*% Y)
 
   phi.priors <- list()
+  bhat[which(bhat < 0)] <- 0
 
-  if(is.na(priors)){
-    a0 <- 1
-    b0 <- 1/100000000
-    mu0 <- rep(0, times = no.betas*M)
-    V0i <- diag(no.betas*M)/10000000
+  if(priors == "Jeffreys"){
+    mu0 <- rep(0, length(bhat))
+    dgts <- sapply(bhat,nDigits)
+    V0i <- diag(length(dgts))*0
+    a0 <- 0
+    b0 <- 0
     for(i in 1:M){
       phi.priors[[i]] <- cbind.data.frame(a = rep(a0, times = N), b = rep(b0, times = N))
     }
-  }else{
-    a0 <- priors$phi$a
-    b0 <- priors$phi$b
+    if(verb != 0){message("Jeffreys Priors Used\n")}
+  }else if(is.list(priors)){
+    phi.priors <- priors$phi
     mu0 <- priors$beta$mu0
     V0i <- solve(priors$beta$V0)
+    if(verb != 0){message("User Specified Priors Used\n")}
+  }else{
+    b0 <- 0.000001
+    a0 <- 0.000001
+    mu0 <- bhat
+    dgts <- sapply(bhat,nDigits)
+    V0i <- diag(1/(10^(dgts+6)))
+    for(i in 1:M){
+      phi.priors[[i]] <- cbind.data.frame(a = rep(a0, times = N), b = rep(b0, times = N))
+    }
+    if(verb != 0){message("Default Priors Used\n")}
   }
 
-
-
+  bhat[which(bhat == 0)] <- eps
+  b.use <- bhat
 
   V0imu0 <- V0i %*% mu0
 
 
-  alpha <- (K)/2 + a0
-  rate <- matrix(NA, ncol= M, nrow =N)
+  alpha <- lapply(phi.priors, function(X){X[,1] + K/2})
+  rate <- rep(NA,N)
 
   beta.temp <- rep(NA, times = no.betas*M)
   if(verb != 0){
@@ -85,10 +102,10 @@ indep_sig <- function(X,y,priors,BTE = c(3000,100000,1), verb = 1){
     for(i in 1:M){
       xB <- as.vector(X.M[[i]] %*% b.use)
       for(j in 1:N){
-        rate[j,i] <- 0.5*(t(xB[j] - y[[i]][j,]) %*% (xB[j] - y[[i]][j,]) )+ b0
+        rate[j] <- 0.5*(t(xB[j] - y[[i]][j,]) %*% (xB[j] - y[[i]][j,]) )+ phi.priors[[i]][j,2]
         }
-      Sig[[i]][,t] <- s.temp <- sapply(rate[,i], gamdraw, shape = alpha)
-      Wi <- diag(s.temp)
+      Sig[[i]][,t] <- s.temp <- apply(cbind(alpha[[i]],rate),1, gamdraw)
+      Wi <- diag(1/s.temp)
       xtWix <- t(x.unit) %*% Wi %*% x.unit * K
       precis <- xtWix + diag(diag(V0i)[((i - 1)*no.betas +1):(i*no.betas)])
       cov.use <- solve(precis)
@@ -107,9 +124,9 @@ indep_sig <- function(X,y,priors,BTE = c(3000,100000,1), verb = 1){
   beta <- lapply(beta,function(X, b){X[,-(1:b)]}, b = burn)
   beta <- lapply(beta, function(X,t){X[,seq(from = 1, to = ncol(X), by = t)]}, t = thin)
 
+  samps <- list(beta = beta,
+                Sig = Sig,
+                priors= list(beta = list(mu0 = mu0, V0 = diag((1/diag(V0i)))), phi = phi.priors), cov.structure = "indep")
 
-
-  return(list(beta = beta,
-              Sig = Sig,
-              priors= list(beta = list(mu0 = mu0, V0 = solve(V0i)), phi = phi.priors), cov.structure = "indep"))
+  return(samps)
 }

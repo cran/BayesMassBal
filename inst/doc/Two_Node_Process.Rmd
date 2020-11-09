@@ -94,6 +94,13 @@ X <- constrainProcess(C = C)
 X
 ```
 
+Constraints can also be imported from a `.csv` file.  The path to a file, included in the `BayesMassBal` package, for this process can be found and constraints can be imported by specifying the location for the `file` argument for `constrainProcess` as shown below:
+
+```{r Xdefcsv}
+constraint_file_location <- system.file("extdata", "twonode_constraints.csv",package = "BayesMassBal")
+X <- constrainProcess(file = constraint_file_location)
+```
+
 The previously simulated data is loaded from a `.csv` file using the `importObservations()` function.  The local location of the the file imported below can be found by typing `system.file("extdata", "twonode_example.csv",package = "BayesMassBal")`.  View the document in Excel to see how your data should be formatted for import.  ***Note:*** it is not required that the entries into the `*.csv` file are separated by `";"`.
 
 ```{r datasim}
@@ -109,7 +116,6 @@ Then, the `BMB` function is used to generate the distribution of constrained mas
 indep.samples <- BMB(X = X, y = y, cov.structure = "indep", BTE = c(100,3000,1), lml = TRUE, verb = 0)
 ```
 
-
 The output of `BMB` is a `BayesMassBal` object.  Special instructions are designated when feeding a `BayesMassBal` object to the `plot()` function.  Adding the argument `layout = "dens"` and indicating the mass balanced flow rate for CuFeS2 at $y_3$ should be plotted using a list supplied to `sample.params`, the desired distribution can be plotted with its 95% [Highest Posterior Density Interval](https://en.wikipedia.org/wiki/Credible_interval).
 
 ```{r feedplot}
@@ -122,6 +128,12 @@ It is also possible to generate trace plots to inspect convergence of the Gibbs 
 
 ```{r traceplot}
 plot(indep.samples,sample.params = list(beta = list(CuFeS2 = 1:3, gangue = 1:3)),layout = "trace",hdi.params = c(1,0.95))
+```
+
+A quantitative diagnostics for convergence and autocorrelation are available as part of the output from `BMB`:
+
+```{r diagnostics}
+indep.samples$diagnostics
 ```
 
 The model with independent variances may not be the best fitting model. Models specifying covariance between sample locations for a single component, and covariance between components at a single location are fit.
@@ -147,6 +159,12 @@ component.samples$lml - location.samples$lml
 ```
 
 Shows there is little difference between the models where `cov.structure  = "location"` and `cov.structure = "component"`, but both of these models better explain the data than `cov.structure = "indep"`.
+
+We can view a summary of the favored model by passing a `BayesMassBal` object to the `summary` function.  While not done in this case, the summary table can be saved by passing the desired name of a `*.csv` file to the `export` argument.
+
+```{r bayessummary}
+summary(component.samples, export = NA)
+```
 
 The main effect of a variable independent of the process can be calculated by supplying a function, `fn` that takes the arguments of mass balanced flow rates `ybal`, and the random independent and uniformly distributed variables `x`. Information can be gained on the main effect of a particular element of `x`, `xj`, on `fn` using the `mainEff` function.  Output from `mainEff` includes information on the distribution of $E_x\lbrack f(x,y_{\mathrm{bal}})|x_j \rbrack$.
 

@@ -1,5 +1,13 @@
-component_sig <- function(X,y,priors,BTE = c(3000,100000,1), verb = 1){
+component_sig <- function(X,y,priors,BTE = c(3000,100000,1), verb = 1, eps = sqrt(.Machine$double.eps)){
 
+  nDigits <- function(x){
+    truncX <- floor(abs(x))
+    if(truncX != 0){
+      floor(log10(truncX)) + 1
+    } else {
+      1
+    }
+  }
   ## Tests
   K <- ncol(y[[1]])
   ## Sample Locations
@@ -34,26 +42,37 @@ component_sig <- function(X,y,priors,BTE = c(3000,100000,1), verb = 1){
 
   beta <- replicate(M, matrix(NA, nrow = no.betas, ncol = iters), simplify = FALSE)
 
-  names(beta) <- names(y)
+  names(beta) <- names(Sig) <- names(y)
 
-  bhat <- as.matrix(solve(t(X) %*% X) %*% t(X) %*% Y)
-  bhat[which(bhat < 0)] <- 1000
+  bhat <- as.vector(solve(t(X) %*% X) %*% t(X) %*% Y)
 
-  b.use <- bhat
-
-  if(is.na(priors)){
-  S.prior <- lapply(y,function(X){diag((apply(X,1,sd))^2)})
-  nu0 <- N
-  mu0 <- rep(0, times = no.betas*M)
-  V0i <- diag(no.betas*M)/10000000
-  }else{
+  bhat[which(bhat < 0)] <- 0
+  if(priors == "Jeffreys"){
+    mu0 <- rep(0, length(bhat))
+    dgts <- sapply(bhat,nDigits)
+    V0i <- diag(length(dgts))*0
+    nu0 <- 0
+    S.prior <- replicate(M, matrix(0, nrow = N, ncol = N), simplify = FALSE)
+    if(verb != 0){message("Jeffreys Priors Used\n")}
+  }else if(is.list(priors)){
     nu0 <- priors$Sig$nu0
     mu0 <- priors$beta$mu0
     V0i <- solve(priors$beta$V0)
     S.prior <- priors$Sig$S
-    }
+    if(verb != 0){message("User Specified Priors Used\n")}
+  }else{
+    S.prior <- lapply(y,function(X){diag((apply(X,1,sd))^2) + diag(nrow(X))*eps})
+    nu0 <- N
+    mu0 <- bhat
+    dgts <- sapply(bhat,nDigits)
+    V0i <- diag(1/(10^(dgts+6)))
+    if(verb != 0){message("Default Priors Used\n")}
+  }
 
   V0imu0 <- V0i %*% mu0
+  bhat[which(bhat == 0)] <- eps
+
+  b.use <- bhat
 
   beta.temp <- rep(NA, times = no.betas*M)
   if(verb != 0){
@@ -94,7 +113,9 @@ component_sig <- function(X,y,priors,BTE = c(3000,100000,1), verb = 1){
   beta <- lapply(beta,function(X, b){X[,-(1:b)]}, b = burn)
   beta <- lapply(beta, function(X,t){X[,seq(from = 1, to = ncol(X), by = t)]}, t = thin)
 
-  return(list(beta = beta,
-              Sig = Sig,
-              priors= list(beta = list(mu0 = mu0, V0 = solve(V0i)), Sig = list(nu0 = nu0, S = S.prior)), cov.structure = "component"))
+  samps <- list(beta = beta,
+                Sig = Sig,
+                priors= list(beta = list(mu0 = mu0, V0 = diag(1/diag(V0i))), Sig = list(nu0 = nu0, S = S.prior)), cov.structure = "component")
+
+  return(samps)
 }
