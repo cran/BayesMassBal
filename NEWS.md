@@ -1,3 +1,10 @@
+# BayesMassBal 1.1.0
+
+## Major Changes
+
+*  Changes to the prior distributions used in the ssEst function
+*  Changes to plotting the output of the ssEst function 
+
 # BayesMassBal 1.0.0
 
 ## Major Changes
